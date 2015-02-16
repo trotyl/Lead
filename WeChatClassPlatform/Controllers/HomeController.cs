@@ -11,12 +11,13 @@ namespace WeChatClassPlatform.Controllers
         public ActionResult Index()
         {
             string echoStr = Request.QueryString["echoStr"];
+            if (String.IsNullOrEmpty(echoStr))
+            {
+                return View();
+            }
             if (CheckSignature())
             {
-                if (!string.IsNullOrEmpty(echoStr))
-                {
-                    return Content(echoStr);
-                }
+                return Content(echoStr);
             }
             return null;
         }
