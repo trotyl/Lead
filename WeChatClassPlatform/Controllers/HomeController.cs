@@ -29,7 +29,7 @@ namespace WeChatClassPlatform.Controllers
             {
                 StreamReader stream = new StreamReader(Request.InputStream);
                 string xml = stream.ReadToEnd();
-                return Content(xml);
+                return null;
                 //processRequest(xml);  
             }
 
