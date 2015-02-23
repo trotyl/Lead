@@ -13,7 +13,7 @@ namespace WeChatClassPlatform.Controllers
 {
     public class HomeController : Controller
     {
-        private static Dictionary<string, bool> _chatSwitch; 
+        private static Dictionary<string, bool> _chatSwitch = new Dictionary<string, bool>(); 
 
         public ActionResult Index()
         {
