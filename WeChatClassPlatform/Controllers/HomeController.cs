@@ -102,19 +102,37 @@ namespace WeChatClassPlatform.Controllers
 
         private string DealWithClick(Dictionary<string, string> requestDictionary)
         {
-            switch (requestDictionary["Event"])
+            string result;
+            switch (requestDictionary["EventKey"])
             {
-                case "<![CDATA[subscribe]]>":
-                    result = "感谢订阅！么么哒！";
+                case "<![CDATA[simsimi]]>":
+                    var userName = requestDictionary["FromUserName"];
+                    if (_chatSwitch.ContainsKey(userName) && _chatSwitch[userName])
+                    {
+                        _chatSwitch[userName] = false;
+                        result = "聊天机器人已关闭~要是对我有什么不满可以现在就说哦~";
+                    }
+                    else
+                    {
+                        _chatSwitch[userName] = true;
+                        result = "聊天机器人已开启~可以尽情聊天啦~";
+                    }
                     break;
                 case "<![CDATA[CLICK]]>":
                     result = DealWithClick(requestDictionary);
                     break;
-                case "<![CDATA[LOCATION]]>":
-                case "<![CDATA[VIEW]]>":
+                case "<![CDATA[food]]>":
+                case "<![CDATA[reading]]>":
+                case "<![CDATA[study]]>":
+                case "<![CDATA[activity]]>":
+                case "<![CDATA[schedule]]>":
+                case "<![CDATA[exam]]>":
+                case "<![CDATA[score]]>":
                 default:
-                    return null;
+                    result = "没太懂你在做什么啦~抱歉咯~";
+                    break;
             }
+            return result;
         }
 
         private bool CheckSignature()
