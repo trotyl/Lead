@@ -95,8 +95,7 @@ namespace WeChatClassPlatform.Controllers
             var client = new HttpClient();
             var result = client.GetStringAsync(
                string.Format("http://dev.skjqr.com/api/weixin.php?email=yzj1995@vip.qq.com&appkey=9d6d258d0e8a3645b740615d0d007af0&msg={0}", gbk)).Result;
-            
-            return result.Replace("[msg]", "").Replace("[/msg]", "");
+            return result.Replace("[msg]", "").Replace("[/msg]", "").Trim();
         }
 
         private string DealWithEvent(Dictionary<string, string> req)
