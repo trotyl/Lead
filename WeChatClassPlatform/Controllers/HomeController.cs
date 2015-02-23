@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Policy;
 using System.Web;
 using System.Web.Mvc;
 using System.Xml.Linq;
@@ -70,17 +71,7 @@ namespace WeChatClassPlatform.Controllers
 
         private ActionResult DealWithText(string xml)
         {
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri("http://dev.skjqr.com");
-                var content = new FormUrlEncodedContent(new[] 
-                {
-                    new KeyValuePair<string, string>("", xml)
-                });
-                var result = client.PostAsync("/api/u/yzj1995@vip.qq.com/index.php", content).Result;
-                string resultContent = result.Content.ReadAsStringAsync().Result;
-                return Content(resultContent);
-            }
+            return Redirect("http://dev.skjqr.com/api/u/yzj1995@vip.qq.com/index.php");
         }
 
         private ActionResult DealWithEvent(Dictionary<string, string> requestDictionary)
@@ -89,7 +80,7 @@ namespace WeChatClassPlatform.Controllers
             respnseDictionary["ToUserName"] = requestDictionary["FromUserName"];
             respnseDictionary["FromUserName"] = requestDictionary["ToUserName"];
             respnseDictionary["CreateTime"] = requestDictionary["CreateTime"];
-            respnseDictionary["MsgType"] = "<![CDATA[text]]>";
+            respnseDictionary["MsgType"] = "text";
 
             string result;
             switch (requestDictionary["Event"])
@@ -105,8 +96,8 @@ namespace WeChatClassPlatform.Controllers
                 default:
                     return null;
             }
-            respnseDictionary["Content"] = string.Format("<![CDATA[{0}]]>", result);
-            XElement el = new XElement("root", requestDictionary.Select(kv => new XElement(kv.Key, kv.Value)));
+            respnseDictionary["Content"] = result;
+            XElement el = new XElement("root", respnseDictionary.Select(kv => new XElement(kv.Key, kv.Value)));
             return Content(el.ToString());
         }
 
