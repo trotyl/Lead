@@ -3,37 +3,118 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Web;
 using System.Web.Mvc;
+using System.Xml.Linq;
 
 namespace WeChatClassPlatform.Controllers
 {
     public class HomeController : Controller
     {
+        private static Dictionary<string, bool> _chatSwitch; 
+
         public ActionResult Index()
         {
-            if (Request.HttpMethod.ToUpper() == "GET")
+            switch (Request.HttpMethod.ToUpper())
             {
-                string echoStr = Request.QueryString["echoStr"];
-                if (String.IsNullOrEmpty(echoStr))
-                {
-                    return View();
-                }
-                if (CheckSignature())
-                {
-                    return Content(echoStr);
-                }
+                case "GET":
+                    return DealWithHttpGet();
+                case "POST":
+                    return DealWithHttpPost();
+                default:
+                    return null;
             }
+        }
 
-            else if (Request.HttpMethod.ToUpper() == "POST")
+        private ActionResult DealWithHttpGet()
+        {
+            string echoStr = Request.QueryString["echoStr"];
+            if (String.IsNullOrEmpty(echoStr))
             {
-                StreamReader stream = new StreamReader(Request.InputStream);
-                string xml = stream.ReadToEnd();
-                return null;
-                //processRequest(xml);  
+                return View();
             }
-
+            if (CheckSignature())
+            {
+                return Content(echoStr);
+            }
             return null;
+        }
+
+        private ActionResult DealWithHttpPost()
+        {
+            StreamReader stream = new StreamReader(Request.InputStream);
+            string xml = stream.ReadToEnd();
+            XElement rootElement = XElement.Parse(xml);
+            Dictionary<string, string> dict = rootElement.Elements().ToDictionary(el => el.Name.LocalName, el => el.Value);
+
+            switch (dict["MsgType"])
+            {
+                case "<![CDATA[event]]>":
+                    return DealWithEvent(dict);
+                case "<![CDATA[text]]>":
+                //return DealWithText(dict);
+                case "<![CDATA[image]]>":
+                //return DealWithImage(dict);
+                case "<![CDATA[voice]]>":
+                //return DealWithVoice(dict);
+                case "<![CDATA[video]]>":
+                //return DealWithVideo(dict);
+                case "<![CDATA[location]]>":
+                    //return DealWithLocation(dict);
+                    return DealWithText(dict);
+                default:
+                    return null;
+            }
+        }
+
+        private ActionResult DealWithText(Dictionary<string, string> dict)
+        {
+            return Redirect("http://dev.skjqr.com/api/u/yzj1995@vip.qq.com/index.php");
+        }
+
+        private ActionResult DealWithEvent(Dictionary<string, string> requestDictionary)
+        {
+            Dictionary<string, string> respnseDictionary = new Dictionary<string,string>();
+            respnseDictionary["ToUserName"] = requestDictionary["FromUserName"];
+            respnseDictionary["FromUserName"] = requestDictionary["ToUserName"];
+            respnseDictionary["CreateTime"] = requestDictionary["CreateTime"];
+            respnseDictionary["MsgType"] = "<![CDATA[text]]>";
+
+            string result;
+            switch (requestDictionary["Event"])
+            {
+                case "<![CDATA[subscribe]]>":
+                    result = "感谢订阅！么么哒！";
+                    break;
+                case "<![CDATA[CLICK]]>":
+                    result = DealWithClick(requestDictionary);
+                    break;
+                case "<![CDATA[LOCATION]]>":
+                case "<![CDATA[VIEW]]>":
+                default:
+                    return null;
+            }
+            respnseDictionary["Content"] = string.Format("<![CDATA[{0}]]>", result);
+            XElement el = new XElement("root", requestDictionary.Select(kv => new XElement(kv.Key, kv.Value)));
+            return Content(el.ToString());
+        }
+
+        private string DealWithClick(Dictionary<string, string> requestDictionary)
+        {
+            switch (requestDictionary["Event"])
+            {
+                case "<![CDATA[subscribe]]>":
+                    result = "感谢订阅！么么哒！";
+                    break;
+                case "<![CDATA[CLICK]]>":
+                    result = DealWithClick(requestDictionary);
+                    break;
+                case "<![CDATA[LOCATION]]>":
+                case "<![CDATA[VIEW]]>":
+                default:
+                    return null;
+            }
         }
 
         private bool CheckSignature()
@@ -49,83 +130,24 @@ namespace WeChatClassPlatform.Controllers
             return tmpStr.ToLower() == signature.ToLower();
         }
 
-        public void processRequest(String xml)
+        private ActionResult DealWithLocation(Dictionary<string, string> dict)
         {
-            //try
-            //{
+            throw new NotImplementedException();
+        }
 
-            //    // xml请求解析    
-            //    Hashtable requestHT = WeixinServer.ParseXml(xml);
+        private ActionResult DealWithVideo(Dictionary<string, string> dict)
+        {
+            throw new NotImplementedException();
+        }
 
-            //    // 发送方帐号（open_id）    
-            //    string fromUserName = (string)requestHT["FromUserName"];
-            //    // 公众帐号    
-            //    string toUserName = (string)requestHT["ToUserName"];
-            //    // 消息类型    
-            //    string msgType = (string)requestHT["MsgType"];
+        private ActionResult DealWithVoice(Dictionary<string, string> dict)
+        {
+            throw new NotImplementedException();
+        }
 
-            //    //文字消息  
-            //    if (msgType == ReqMsgType.Text)
-            //    {
-            //        // Response.Write(str);  
-
-            //        string content = (string)requestHT["Content"];
-            //        if (content == "1")
-            //        {
-            //            // Response.Write(str);  
-            //            Response.Write(GetNewsMessage(toUserName, fromUserName));
-            //            return;
-            //        }
-            //        if (content == "2")
-            //        {
-            //            Response.Write(GetUserBlogMessage(toUserName, fromUserName));
-            //            return;
-            //        }
-            //        if (content == "3")
-            //        {
-            //            Response.Write(GetGroupMessage(toUserName, fromUserName));
-            //            return;
-            //        }
-            //        if (content == "4")
-            //        {
-            //            Response.Write(GetWinePartyMessage(toUserName, fromUserName));
-            //            return;
-            //        }
-            //        Response.Write(GetMainMenuMessage(toUserName, fromUserName, "你好，我是vinehoo,"));
-
-            //    }
-            //    else if (msgType == ReqMsgType.Event)
-            //    {
-            //        // 事件类型    
-            //        String eventType = (string)requestHT["Event"];
-            //        // 订阅    
-            //        if (eventType == ReqEventType.Subscribe)
-            //        {
-
-            //            Response.Write(GetMainMenuMessage(toUserName, fromUserName, "谢谢您的关注！,"));
-
-            //        }
-            //        // 取消订阅    
-            //        else if (eventType == ReqEventType.Unsubscribe)
-            //        {
-            //            // TODO 取消订阅后用户再收不到公众号发送的消息，因此不需要回复消息    
-            //        }
-            //        // 自定义菜单点击事件    
-            //        else if (eventType == ReqEventType.CLICK)
-            //        {
-            //            // TODO 自定义菜单权没有开放，暂不处理该类消息    
-            //        }
-            //    }
-            //    else if (msgType == ReqMsgType.Location)
-            //    {
-            //    }
-
-
-            //}
-            //catch (Exception e)
-            //{
-
-            //}
+        private ActionResult DealWithImage(Dictionary<string, string> dict)
+        {
+            throw new NotImplementedException();
         }
     }
 }
