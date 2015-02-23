@@ -50,27 +50,37 @@ namespace WeChatClassPlatform.Controllers
 
             switch (dict["MsgType"])
             {
-                case "<![CDATA[event]]>":
+                case "event":
                     return DealWithEvent(dict);
-                case "<![CDATA[text]]>":
+                case "text":
                 //return DealWithText(dict);
-                case "<![CDATA[image]]>":
+                case "image":
                 //return DealWithImage(dict);
-                case "<![CDATA[voice]]>":
+                case "voice":
                 //return DealWithVoice(dict);
-                case "<![CDATA[video]]>":
+                case "video":
                 //return DealWithVideo(dict);
-                case "<![CDATA[location]]>":
+                case "location":
                     //return DealWithLocation(dict);
-                    return DealWithText(dict);
+                    return DealWithText(xml);
                 default:
                     return null;
             }
         }
 
-        private ActionResult DealWithText(Dictionary<string, string> dict)
+        private ActionResult DealWithText(string xml)
         {
-            return Redirect("http://dev.skjqr.com/api/u/yzj1995@vip.qq.com/index.php");
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("http://dev.skjqr.com");
+                var content = new FormUrlEncodedContent(new[] 
+                {
+                    new KeyValuePair<string, string>("", xml)
+                });
+                var result = client.PostAsync("/api/u/yzj1995@vip.qq.com/index.php", content).Result;
+                string resultContent = result.Content.ReadAsStringAsync().Result;
+                return Content(resultContent);
+            }
         }
 
         private ActionResult DealWithEvent(Dictionary<string, string> requestDictionary)
@@ -84,14 +94,14 @@ namespace WeChatClassPlatform.Controllers
             string result;
             switch (requestDictionary["Event"])
             {
-                case "<![CDATA[subscribe]]>":
+                case "subscribe":
                     result = "感谢订阅！么么哒！";
                     break;
-                case "<![CDATA[CLICK]]>":
+                case "CLICK":
                     result = DealWithClick(requestDictionary);
                     break;
-                case "<![CDATA[LOCATION]]>":
-                case "<![CDATA[VIEW]]>":
+                case "LOCATION":
+                case "VIEW":
                 default:
                     return null;
             }
@@ -105,7 +115,7 @@ namespace WeChatClassPlatform.Controllers
             string result;
             switch (requestDictionary["EventKey"])
             {
-                case "<![CDATA[simsimi]]>":
+                case "simsimi":
                     var userName = requestDictionary["FromUserName"];
                     if (_chatSwitch.ContainsKey(userName) && _chatSwitch[userName])
                     {
@@ -118,16 +128,16 @@ namespace WeChatClassPlatform.Controllers
                         result = "聊天机器人已开启~可以尽情聊天啦~";
                     }
                     break;
-                case "<![CDATA[CLICK]]>":
+                case "CLICK":
                     result = DealWithClick(requestDictionary);
                     break;
-                case "<![CDATA[food]]>":
-                case "<![CDATA[reading]]>":
-                case "<![CDATA[study]]>":
-                case "<![CDATA[activity]]>":
-                case "<![CDATA[schedule]]>":
-                case "<![CDATA[exam]]>":
-                case "<![CDATA[score]]>":
+                case "food":
+                case "reading":
+                case "study":
+                case "activity":
+                case "schedule":
+                case "exam":
+                case "score":
                 default:
                     result = "没太懂你在做什么啦~抱歉咯~";
                     break;
