@@ -9,12 +9,13 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Xml.Linq;
+using WeChatClassPlatform.Models;
 
 namespace WeChatClassPlatform.Controllers
 {
     public class HomeController : Controller
     {
-        private static Dictionary<string, bool> _chatSwitch = new Dictionary<string, bool>();
+        public static readonly Dictionary<string, User> Users = new Dictionary<string, User>();
 
         public ActionResult Index()
         {
@@ -50,6 +51,8 @@ namespace WeChatClassPlatform.Controllers
             XElement rootElement = XElement.Parse(xml);
             Dictionary<string, string> dict = rootElement.Elements().ToDictionary(el => el.Name.LocalName, el => el.Value);
 
+            UserCheck(dict);
+
             var raw = @"<xml>
 <ToUserName><![CDATA[{0}]]></ToUserName>
 <FromUserName><![CDATA[{1}]]></FromUserName>
@@ -65,17 +68,12 @@ namespace WeChatClassPlatform.Controllers
                     result = DealWithEvent(dict);
                     break;
                 case "text":
-                //return DealWithText(dict);
-                case "image":
-                //return DealWithImage(dict);
-                case "voice":
-                //return DealWithVoice(dict);
-                case "video":
-                //return DealWithVideo(dict);
-                case "location":
-                    //return DealWithLocation(dict);
-                    result = DealWithText(dict["Content"]);
+                    result = DealWithText(dict);
                     break;
+                case "image":
+                case "voice":
+                case "video":
+                case "location":
                 default:
                     return null;
             }
@@ -89,13 +87,90 @@ namespace WeChatClassPlatform.Controllers
             return Content(response);
         }
 
-        private string DealWithText(string text)
+        private void UserCheck(Dictionary<string, string> dict)
         {
-            var gbk = HttpUtility.UrlEncode(text, Encoding.GetEncoding("GBK"));
+            var name = dict["FromUserName"];
+            if (!Users.ContainsKey(name))
+            {
+                var user = new User { Id = name, IsChatState = false, };
+                Users[name] = user;
+            }
+        }
+
+        private string DealWithText(Dictionary<string, string> req)
+        {
+            var user = req["FromUserName"];
+            if (!Users[user].IsChatState)
+            {
+                return DealWithCommand(req);
+            }
+
+            var gbk = HttpUtility.UrlEncode(req["Content"], Encoding.GetEncoding("GBK"));
             var client = new HttpClient();
             var result = client.GetStringAsync(
                string.Format("http://dev.skjqr.com/api/weixin.php?email=yzj1995@vip.qq.com&appkey=9d6d258d0e8a3645b740615d0d007af0&msg={0}", gbk)).Result;
             return result.Replace("[msg]", "").Replace("[/msg]", "").Trim();
+        }
+
+        private string DealWithCommand(Dictionary<string, string> req)
+        {
+            var commands = req["Content"].Split(' ');
+            var name = req["FromUserName"];
+            var user = Users[name];
+            string result = null;
+            if (commands[0] == "set")
+            {
+                switch (commands[1])
+                {
+                    case "name":
+                    case "username":
+                    case "nickname":
+                        user.Name = commands[2];
+                        Users[name] = user;
+                        result = "成功更改用户昵称~";
+                        break;
+                    case "number":
+                    case "student":
+                    case "id":
+                    case "no":
+                        user.Number = commands[2];
+                        Users[name] = user;
+                        result = "成功更改用户学号~";
+                        break;
+                    case "password":
+                    case "pass":
+                    case "pwd":
+                        user.Password = commands[2];
+                        Users[name] = user;
+                        result = "成功更改用户密码~";
+                        break;
+                }
+            }
+
+            if (commands[0] == "get")
+            {
+                switch (commands[1])
+                {
+                    case "name":
+                    case "username":
+                    case "nickname":
+                        result = "当前用户昵称为：" + user.Name;
+                        break;
+                    case "number":
+                    case "student":
+                    case "id":
+                    case "no":
+                        result = "当前用户学号为：" + user.Number;
+                        break;
+                    case "password":
+                    case "pass":
+                    case "pwd":
+                        result = "无法查看明文密码，如密码有误请重新设置！";
+                        break;
+                }
+            }
+
+            return result ?? "指令过于高深...无法理解...";
         }
 
         private string DealWithEvent(Dictionary<string, string> req)
@@ -124,14 +199,14 @@ namespace WeChatClassPlatform.Controllers
             {
                 case "simsimi":
                     var userName = requestDictionary["FromUserName"];
-                    if (_chatSwitch.ContainsKey(userName) && _chatSwitch[userName])
+                    if (Users.ContainsKey(userName) && Users[userName].IsChatState)
                     {
-                        _chatSwitch[userName] = false;
+                        Users[userName].IsChatState = false;
                         result = "聊天机器人已关闭~要是对我有什么不满可以现在就说哦~";
                     }
                     else
                     {
-                        _chatSwitch[userName] = true;
+                        Users[userName].IsChatState = true;
                         result = "聊天机器人已开启~可以尽情聊天啦~";
                     }
                     break;
@@ -165,22 +240,22 @@ namespace WeChatClassPlatform.Controllers
             return tmpStr.ToLower() == signature.ToLower();
         }
 
-        private ActionResult DealWithLocation(Dictionary<string, string> dict)
+        private string DealWithLocation(Dictionary<string, string> dict)
         {
             throw new NotImplementedException();
         }
 
-        private ActionResult DealWithVideo(Dictionary<string, string> dict)
+        private string DealWithVideo(Dictionary<string, string> dict)
         {
             throw new NotImplementedException();
         }
 
-        private ActionResult DealWithVoice(Dictionary<string, string> dict)
+        private string DealWithVoice(Dictionary<string, string> dict)
         {
             throw new NotImplementedException();
         }
 
-        private ActionResult DealWithImage(Dictionary<string, string> dict)
+        private string DealWithImage(Dictionary<string, string> dict)
         {
             throw new NotImplementedException();
         }
