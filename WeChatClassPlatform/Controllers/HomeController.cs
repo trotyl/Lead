@@ -50,10 +50,20 @@ namespace WeChatClassPlatform.Controllers
             XElement rootElement = XElement.Parse(xml);
             Dictionary<string, string> dict = rootElement.Elements().ToDictionary(el => el.Name.LocalName, el => el.Value);
 
+            var raw = @"<xml>
+<ToUserName><![CDATA[{0}]]></ToUserName>
+<FromUserName><![CDATA[{1}]]></FromUserName>
+<CreateTime>{2}</CreateTime>
+<MsgType><![CDATA[text]]></MsgType>
+<Content><![CDATA[{3}]]></Content>
+</xml>";
+
+            string result;
             switch (dict["MsgType"])
             {
                 case "event":
-                    return DealWithEvent(dict);
+                    result = DealWithEvent(dict);
+                    break;
                 case "text":
                 //return DealWithText(dict);
                 case "image":
@@ -64,31 +74,33 @@ namespace WeChatClassPlatform.Controllers
                 //return DealWithVideo(dict);
                 case "location":
                     //return DealWithLocation(dict);
-                    return DealWithText(dict["Content"]);
+                    result = DealWithText(dict["Content"]);
+                    break;
                 default:
                     return null;
             }
+
+            var response = String.Format(raw,
+                dict["FromUserName"],
+                dict["ToUserName"],
+                dict["CreateTime"],
+                result);
+
+            return Content(response);
         }
 
-        private ActionResult DealWithText(string text)
+        private string DealWithText(string text)
         {
             var gbk = HttpUtility.UrlEncode(text, Encoding.GetEncoding("GBK"));
             var client = new HttpClient();
             var result = client.GetStringAsync(
                string.Format("http://dev.skjqr.com/api/weixin.php?email=yzj1995@vip.qq.com&appkey=9d6d258d0e8a3645b740615d0d007af0&msg={0}", gbk)).Result;
-            return Content(result.Replace("[msg]", "").Replace("[/msg]", ""));
+            
+            return result.Replace("[msg]", "").Replace("[/msg]", "");
         }
 
-        private ActionResult DealWithEvent(Dictionary<string, string> req)
+        private string DealWithEvent(Dictionary<string, string> req)
         {
-            var raw = @"<xml>
-<ToUserName><![CDATA[{0}]]></ToUserName>
-<FromUserName><![CDATA[{1}]]></FromUserName>
-<CreateTime>{2}</CreateTime>
-<MsgType><![CDATA[text]]></MsgType>
-<Content><![CDATA[{3}]]></Content>
-</xml>";
-
             string result;
             switch (req["Event"])
             {
@@ -103,12 +115,7 @@ namespace WeChatClassPlatform.Controllers
                 default:
                     return null;
             }
-            var response = String.Format(raw,
-                req["FromUserName"],
-                req["ToUserName"],
-                req["CreateTime"],
-                result);
-            return Content(response);
+            return result;
         }
 
         private string DealWithClick(Dictionary<string, string> requestDictionary)
