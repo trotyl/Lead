@@ -74,31 +74,36 @@ namespace WeChatClassPlatform.Controllers
             return Redirect("http://dev.skjqr.com/api/u/yzj1995@vip.qq.com/index.php");
         }
 
-        private ActionResult DealWithEvent(Dictionary<string, string> requestDictionary)
+        private ActionResult DealWithEvent(Dictionary<string, string> req)
         {
-            Dictionary<string, string> respnseDictionary = new Dictionary<string,string>();
-            respnseDictionary["ToUserName"] = requestDictionary["FromUserName"];
-            respnseDictionary["FromUserName"] = requestDictionary["ToUserName"];
-            respnseDictionary["CreateTime"] = requestDictionary["CreateTime"];
-            respnseDictionary["MsgType"] = "text";
+            var raw = @"<xml>
+<ToUserName><![CDATA[{0}]]></ToUserName>
+<FromUserName><![CDATA[{1}]]></FromUserName>
+<CreateTime>{2}</CreateTime>
+<MsgType><![CDATA[text]]></MsgType>
+<Content><![CDATA[{3}]]></Content>
+</xml>";
 
             string result;
-            switch (requestDictionary["Event"])
+            switch (req["Event"])
             {
                 case "subscribe":
                     result = "感谢订阅！么么哒！";
                     break;
                 case "CLICK":
-                    result = DealWithClick(requestDictionary);
+                    result = DealWithClick(req);
                     break;
                 case "LOCATION":
                 case "VIEW":
                 default:
                     return null;
             }
-            respnseDictionary["Content"] = result;
-            XElement el = new XElement("root", respnseDictionary.Select(kv => new XElement(kv.Key, kv.Value)));
-            return Content(el.ToString());
+            var response = String.Format(raw,
+                req["FromUserName"],
+                req["ToUserName"],
+                req["CreateTime"],
+                result);
+            return Content(response);
         }
 
         private string DealWithClick(Dictionary<string, string> requestDictionary)
