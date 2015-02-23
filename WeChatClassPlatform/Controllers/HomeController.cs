@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Policy;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Xml.Linq;
@@ -13,7 +14,7 @@ namespace WeChatClassPlatform.Controllers
 {
     public class HomeController : Controller
     {
-        private static Dictionary<string, bool> _chatSwitch = new Dictionary<string, bool>(); 
+        private static Dictionary<string, bool> _chatSwitch = new Dictionary<string, bool>();
 
         public ActionResult Index()
         {
@@ -63,15 +64,19 @@ namespace WeChatClassPlatform.Controllers
                 //return DealWithVideo(dict);
                 case "location":
                     //return DealWithLocation(dict);
-                    return DealWithText(xml);
+                    return DealWithText(dict["Content"]);
                 default:
                     return null;
             }
         }
 
-        private ActionResult DealWithText(string xml)
+        private ActionResult DealWithText(string text)
         {
-            return Redirect("http://dev.skjqr.com/api/u/yzj1995@vip.qq.com/index.php");
+            var gbk = HttpUtility.UrlEncode(text, Encoding.GetEncoding("GBK"));
+            var client = new HttpClient();
+            var result = client.GetStringAsync(
+               string.Format("http://dev.skjqr.com/api/weixin.php?email=yzj1995@vip.qq.com&appkey=9d6d258d0e8a3645b740615d0d007af0&msg={0}", gbk)).Result;
+            return Content(result.Replace("[msg]", "").Replace("[/msg]", ""));
         }
 
         private ActionResult DealWithEvent(Dictionary<string, string> req)
