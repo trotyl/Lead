@@ -26,7 +26,7 @@ namespace WeChatClassPlatform.Message
                     msg = new TextMessage(xml);
                     break;
                 case "image":
-                    msg = new ImageMessage();
+                    msg = new ImageMessage(xml);
                     break;
                 default:
                     msg = null;
