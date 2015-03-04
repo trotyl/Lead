@@ -6,7 +6,7 @@ using System.Web;
 
 namespace WeChatClassPlatform.Message
 {
-    public class TextMessage : Message
+    public class TextMessage : AbstractMessage
     {
         public string Content { get; set; }
 
@@ -36,7 +36,7 @@ namespace WeChatClassPlatform.Message
             }
         }
 
-        public string ToXml()
+        public override string ToXml()
         {
             const string format = @"<xml>
 <ToUserName><![CDATA[{0}]]></ToUserName>

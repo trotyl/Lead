@@ -6,15 +6,9 @@ using System.Web;
 
 namespace WeChatClassPlatform.Message
 {
-    public class Message
+    public static class Message
     {
-        public string ToUserName { get; set; }
-        public string FromUserName { get; set; }
-        public int CreateTime { get; set; }
-        public string MsgType { get; set; }
-        public int MsgId { get; set; }
-
-        public Message Parse(string xml)
+        public static AbstractMessage Parse(string xml)
         {
             const string pattern = @"<MsgType><?<MsgType>.*?></MsgType>";
             Regex re = new Regex(pattern, RegexOptions.Compiled);
@@ -25,7 +19,7 @@ namespace WeChatClassPlatform.Message
                 GroupCollection groups = match.Groups;
                 msgType = groups["MsgType"].Value;
             }
-            Message msg;
+            AbstractMessage msg;
             switch (msgType)
             {
                 case "text":
@@ -37,5 +31,6 @@ namespace WeChatClassPlatform.Message
             }
             return msg;
         }
+
     }
 }
