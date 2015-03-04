@@ -5,10 +5,10 @@ using System.Web;
 
 namespace WeChatClassPlatform.Message
 {
-    public class PhotoMessage : AbstractMessage
+    public class VoiceMessage : AbstractMessage
     {
-        public string PicUrl { get; set; }
         public string MediaId { get; set; }
+        public string Format { get; set; }
 
         public override string ToXml()
         {
@@ -17,12 +17,11 @@ namespace WeChatClassPlatform.Message
 <FromUserName><![CDATA[{1}]]></FromUserName> 
 <CreateTime>{2}</CreateTime>
 <MsgType><![CDATA[{3}]]></MsgType>
-<PicUrl><![CDATA[{4}]]></PicUrl>
-<MediaId><![CDATA[{5}]]></MediaId>
+<MediaId><![CDATA[{4}]]></MediaId>
+<Format><![CDATA[{5}]]></Format>
 <MsgId>{6}</MsgId>
 </xml>";
-            return string.Format(format, ToUserName, FromUserName, CreateTime, MsgType, PicUrl, MediaId, MsgId);
+            return string.Format(format, ToUserName, FromUserName, CreateTime, MsgType, MediaId, Format, MsgId);
         }
-
     }
 }

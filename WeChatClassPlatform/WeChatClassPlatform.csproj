@@ -204,8 +204,9 @@
     </Compile>
     <Compile Include="Message\AbstractMessage.cs" />
     <Compile Include="Message\Message.cs" />
-    <Compile Include="Message\PhotoMessage.cs" />
+    <Compile Include="Message\ImageMessage.cs" />
     <Compile Include="Message\TextMessage.cs" />
+    <Compile Include="Message\VoiceMessage.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Exam.cs" />
